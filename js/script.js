@@ -1,11 +1,39 @@
 $(document).ready(function () {
   document.getElementById("footer-bottom").classList.add("stick-to-bottom");
+
+  // This block of code ensures that endusers can search for orders until the current day
+  // TODO: Add some sort of freeze in the future so that when the website it accessed years later,
+  //       endusers don't get a too wide range to select
+  // TODO: Get the start date from the sheet instead of hard coding it in.
+  var today = new Date();
+  var month = today.getMonth() + 1;
+  $('#date-box').datepicker({
+    format: "dd/mm/yyyy",
+    startDate: "01/03/2020",
+    endDate: today.getDate() + "/" + month + "/" + today.getUTCFullYear(),
+    maxViewMode: 1,
+    clearBtn: true
+  });
+
+  $('select#language-box').on('change', function (e) {
+    if ($(this).find(":selected").val() === "english") {
+      top.window.location = "https://www.covid-india.in/";
+    } else {
+      window.location = window.location.href.replace("index.html", "").replace("index", "") + $(this).find(":selected").val() + ".html";
+    }
+  });
+
+  if (window.location.href.includes("covid-india.mox") ) {
+    document.getElementById("language-box").value = "hindi";
+  }
+
   var sheetID;
   var sheetName;
   var pageLength = 10;
-  var queryArray = [""];
+  var experimental = false;
   var columnBreakpoints = ["meddesktop", "meddesktop", "tabletp", "mobilel", "mobilep"];
   const urlParams = new URLSearchParams(window.location.search);
+  queryArray = [""];
 
   // Check if a custom sheet query is provided
   if (urlParams.get("sheet")) {
@@ -34,8 +62,22 @@ $(document).ready(function () {
     })
     .then(function (data, tabletop) {
       columnNames = data[sheetName].columnNames;
+      sheetData = data[sheetName].elements;
 
-      var sheetData = data[sheetName].elements;
+      // This block generates accepted query strings from the column names.
+      // We set all the column case to lower case and use the first word of
+      // the column name if it two contains two or more string, separated by
+      // . , + - / " ' ; : and space.
+      for (var name of columnNames) {
+        queryArray.push(name.trim().toLowerCase().split(/[\+\s,-//\."':;]+/)[0]);
+      }
+
+      sheetData.map(function(entry) {
+        var link = (window.location.protocol + "//" + window.location.hostname + "/?" + queryArray[1] + "=" + entry[columnNames[0]] + "&" + queryArray[2] + "=" + entry[columnNames[1]].replace("Latest order, ", "").replace("Latest order, ", "") + "&" + queryArray[3] + "=" + entry[columnNames[2]] + "&" + queryArray[4] + "=" + entry[columnNames[3]] + "&expand").replace(/ /g, "%20");
+        entry["Copy Link to Summary"] = '<div class="prentend-link" data-value=' + link + ' onClick="copyToClipboard(this)"><span class="fa fa-copy">&nbsp;&nbsp;</span>Copy link to this Summary<span class="alert alert-success copied-text">COPIED</span></div>';
+        return entry;
+      });
+
       var columnObj = [{
         "orderable": false,
         "data": null,
@@ -45,6 +87,20 @@ $(document).ready(function () {
         "width": "5%",
         "targets": 0
       }];
+
+      // This is the first column which has the expand button
+      columnDefs.push({
+        className: 'control new-summary',
+        orderable: false,
+        targets: 0
+      });
+
+      // Hide Latest Order column in the sheet
+      columnDefs.push({
+        targets: 25,
+        searchable: true,
+        visible: false
+      })
 
       // Here we separate the data column wise to feed to DataTable
       for (var i = 0; i < columnNames.length; i++) {
@@ -71,7 +127,7 @@ $(document).ready(function () {
             });
           } else {
             columnDefs.push({
-              "width": "35%",
+              "width": "38%",
               "targets": i
             });
           }
@@ -86,23 +142,38 @@ $(document).ready(function () {
           $("#firstRow").append('<th class="none">' + columnNames[i] + '</th>');
         }
       };
-      $("#firstRow").append('<th class="none print-button">Operation</th>');
+
+      // Manually add the generated summary link button
+      columnObj.push({
+        "mDataProp": "Copy Link to Summary"
+      });
+      $("#firstRow").append('<th class="none">Copy Link to Summary</th>');
+
+      // Add a Print Column
+      $("#firstRow").append('<th class="none not-print">Print</th>');
       columnObj.push({
         "orderable": false,
         "data": null,
-        "defaultContent": '<a href="#" onClick="printOrder();">Print selected summaries</a>'
+        "defaultContent": '<a href="#" class="not-print" onClick="printOrder();"><span class="fa fa-print">&nbsp;&nbsp;</span>Print selected summaries</a>'
       });
-      $("#firstRow").append('<th class="none print-button">Operation</th>');
+
+      // Add a Download Column
+      $("#firstRow").append('<th class="none not-print">Download</th>');
       columnObj.push({
         "orderable": false,
         "data": null,
-        "defaultContent": '<a href="#" onClick="downloadOrderAsCSV(this);">Download selected summaries as CSV</a>'
+        "defaultContent": '<a href="#" class="not-print" onClick="downloadOrderAsCSV(this);"><span class="fa fa-download">&nbsp;&nbsp;</span>Download selected summaries as CSV</a>'
       });
-      columnDefs.push({
-        className: 'control',
-        orderable: false,
-        targets: 0
-      });
+
+      if (experimental === true) {
+        // Add a Download As Image Column
+        $("#firstRow").append('<th class="none not-print">Download Image</th>');
+        columnObj.push({
+          "orderable": false,
+          "data": null,
+          "defaultContent": '<a href="#" class="not-print" onClick="downloadOrderAsImage(this);"><span class="fa fa-download">&nbsp;&nbsp;</span>Download this Order as an Image</a>'
+        });
+      }
 
       //$("#updated-on").html("The data was last updated on <b>" + new Date(data[sheetName].raw.feed.updated.$t) + "</b>");
 
@@ -115,10 +186,10 @@ $(document).ready(function () {
               var data = $.map(columns, function (col, i) {
                 // We customise how we want to show the data when the plus sign is clicked
                 if (col.hidden && col.data) {
-                  if (col.data.includes("http")) {
+                  if (col.data.startsWith("http") && col.title != "Copy Link to Summary") {
                     return '<tr data-dt-row="' + col.rowIndex + '" data-dt-column="' + col.columnIndex + '">' +
                       '<td>' + col.title + '</td> ' +
-                      '<td class="pdf-link" onClick=' + 'window.open("' + col.data + '")>Click to view Order</td>' +
+                      '<td class="pdf-link" onClick=window.open("' + col.data + '")><span class="fa fa-external-link">&nbsp;&nbsp;</span>Click to view Order</td>' +
                       '</tr>';
                   } else {
                     return '<tr data-dt-row="' + col.rowIndex + '" data-dt-column="' + col.columnIndex + '">' +
@@ -142,6 +213,13 @@ $(document).ready(function () {
         "lengthMenu": [10, 15, 20, 50, 100, 200],
         "bServerSide": false,
         "bProcessing": true,
+        "drawCallback": function( settings ) {
+          if (getDrawData === false){
+            return;
+          }
+          var api = this.api();
+          //console.log( api.rows( {page:'current'} ).data()[0] );
+        },
         "dom": 'Bfrtlip',
         "buttons": [
           {
@@ -214,10 +292,6 @@ $(document).ready(function () {
               $('<option/>').val(entry.trim()).html(entry.trim()).appendTo('#issue-box');
             };
           });
-          var dateValue = aData[columnObj[3].mDataProp].replace(/\s+/g, ' ').replace(/'/g, "\\'").trim();
-          if ($("#date-box option[value='" + dateValue + "']").length == 0) {
-            $('<option/>').val(dateValue).html(dateValue).appendTo('#date-box');
-          };
         },
         "fixedHeader": {
           header: true
@@ -240,40 +314,58 @@ $(document).ready(function () {
         }
       });
 
-      $('select#date-box').on('change', function (e) {
-        if ($(this).find(":selected").text() === "All Dates") {
-          table.column(3).search("").draw();
-        } else {
-          table.column(3).search($(this).find(":selected").val()).draw();
+      $('select#latest-box').on('change', function (e) {
+        if ($(this).find(":selected").text() === "Show All Orders") {
+          table.column(25).search("").draw();
+        } else if ($(this).find(":selected").text() === "Only Latest Orders") {
+          table.column(25).search("yes").draw();
         }
       });
 
-      // This block creates accepted query strings from the column names.
-      // We set all the column case to lower case and use the first word of
-      // the column name if it two contains two or more string, separated by
-      // . , + - / " ' ; : and space.
-      for (var name of columnNames) {
-        queryArray.push(name.toLowerCase().split(/[\+\s,-//\."':;]+/)[0]);
-      }
+      /**$('select#colour-box').on('change', function (e) {
+        document.documentElement.style.setProperty('--accent-color', $(this).find(":selected").val());
+        document.documentElement.style.setProperty('--stripe-color', $(this).find(":selected").val()+"50");
+      });**/
+
+      $('input#date-box').on('change', function (e) {
+        if ($(this).text() === "Search by Date") {
+          table.column(3).search("").draw();
+        } else {
+          table.column(3).search($(this).val()).draw();
+        }
+      });
 
       for (var key of urlParams.keys()) {
+        if (key === "date") {
+          getDrawData = true;
+        }
         if (queryArray.includes(key)) {
           var index = queryArray.indexOf(key);
-          var value = urlParams.get(key);
+          var valueOfKey = urlParams.get(key);
 
-          table.column(index).search(value).draw();
+          table.column(index).search(valueOfKey).draw();
 
-          /*if (key === "state") {
-              $("#state-box option[value="+value+"]").attr('selected', 'selected');
-          }*/
+          if (key === "states") {
+            document.getElementById("state-box").value = valueOfKey;
+          } else if (key === "issues") {
+            document.getElementById("issue-box").value = valueOfKey.split(",")[0];
+          } else if (key === "date") {
+            document.getElementById("date-box").value = valueOfKey;
+          } else if (key === "latest") {
+            document.getElementById("latest-box").value = "Only Latest Orders";
+            table.column(25).search("yes").draw();
+          }
         } else if ( !(isNaN(key)) ) {
           var index = parseInt(key);
           if (key < queryArray.length) {
-            value = urlParams.get(key);
-            table.column(index).search(value).draw();
+            valueOfKey = urlParams.get(key);
+            table.column(index).search(valueOfKey).draw();
           }
+        } else if (key === "expand") {
+          table.rows(':not(.parent)').nodes().to$().find('td:first-child').trigger('click');
         }
       };
+      getDrawData = false;
 
       $("#loader").hide();
       document.getElementById("footer-bottom").classList.remove("stick-to-bottom");
@@ -283,21 +375,45 @@ $(document).ready(function () {
 
 // A fallback in case the browser does not fire print events at the right time
 var printSetupDone = false;
+var getDrawData = false;
+
+// Copy text to clipboard
+function copyToClipboard(obj) {
+  const el = document.createElement('textarea');
+  el.value = obj.getAttribute("data-value");
+  document.body.appendChild(el);
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+  
+  // Fade in and fade out the copied text notification
+  var ele = obj.lastChild;
+  $(ele).fadeIn();
+  setTimeout(function() {
+    $(ele).fadeOut()
+  }, 3000);
+}
+
+function downloadOrderAsImage(obj) {
+  var rowData = $(obj).parents(".child").last().prevAll(".parent");
+}
 
 function prepareForCSV() {
   var dataCSV = [];
   var rowData = $(".parent").children();
   var rowDataCSV = [];
+  var colIndex = 0;
   dataCSV.push(columnNames);
 
   for (var i = 0; i < rowData.length; i++) {
-    if (rowData[i].className === "control sorting_1" || rowData[i].innerText === "Download selected summaries as CSV") {
+    if ($(rowData[i]).hasClass("new-summary")) {
+      dataCSV.push(rowDataCSV.join(","));
+      rowDataCSV = [];
+      colIndex = 0;
       continue;
     }
 
-    if (rowData[i].innerText === "Print selected summaries") {
-      dataCSV.push(rowDataCSV.join(","));
-      rowDataCSV = [];
+    if (colIndex >= columnNames.length-1) {
       continue;
     }
 
@@ -307,7 +423,10 @@ function prepareForCSV() {
     } else {
       rowDataCSV.push(text);
     }
+    colIndex++;
   }
+
+  dataCSV.push(rowDataCSV.join(","));
   return dataCSV.join("\n");
 }
 
@@ -331,30 +450,17 @@ function readyForPrinting() {
 
   for (var i = 0; i < rowData.length; i++) {
     // Only useful when there are multiple entries being printed.
-    // It makes sure to reset the column length index variable.
-    if (colIndex === columnNames.length) {
-      colIndex = 0;
-    }
-
-    // Only useful when there are multiple entries being printed.
     // Adds a breaker between two entries.
     // Also stops the sorting column from being printed.
-    if (rowData[i].className === "control sorting_1") {
-      if (newEntry === true) {
-        $("#print-table").append('<tr><td></td><td></td></tr>');
-        $("#print-table").append('<tr><td></td><td> <b>NEW ENTRY</b> </td></tr>');
-        $("#print-table").append('<tr><td></td><td></td></tr>');
-        newEntry = false;
-      }
+    if ($(rowData[i]).hasClass("new-summary")) {
+      $("#print-table").append('<tr><td></td><td></td></tr>');
+      $("#print-table").append('<tr><td></td><td> <b>NEW ENTRY</b> </td></tr>');
+      $("#print-table").append('<tr><td></td><td></td></tr>');
+      colIndex = 0;
       continue;
     }
 
-    if (rowData[i].innerText === "Print selected summaries") {
-      continue;
-    }
-    // Stops the print column from being printed.
-    if (rowData[i].innerText === "Download selected summaries as CSV") {
-      newEntry = true;
+    if (colIndex >= columnNames.length-1) {
       continue;
     }
 

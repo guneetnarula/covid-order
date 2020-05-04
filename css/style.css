@@ -1,5 +1,6 @@
 :root {
-  --accent-color: #74d3dc;
+  --accent-color: #da534f;
+  --stripe-color: #da534f50;
 }
 
 .horz-center {
@@ -7,12 +8,18 @@
   text-align: center;
 }
 
+.language-style {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+}
+
 h1 {
   font-size: 3.8em;
 }
 
 .pdf-link {
-  color: #007bff;
+  color: #007bff!important;
   cursor: pointer;
   width: 80%;
 }
@@ -22,7 +29,7 @@ h1 {
   text-decoration: underline;
 }
 
-select {
+select, #date-box {
   background: none transparent;
   height: 40px;
   border: none;
@@ -32,13 +39,18 @@ select {
   min-width: 340px;
   margin: auto;
   letter-spacing: .10em;
-  font-size: 26 px;
-  font-weight: 600;
+  font-size: 25px;
+  font-weight: 500;
   display: block;
   color: #000;
   position: relative;
   transition: color .3s .15s ease-in;
   text-align-last: center;
+}
+
+#language-box {
+  min-width: 150px;
+  width: 10vw;
 }
 
 select:focus {
@@ -48,15 +60,15 @@ select:focus {
 }
 
 select:hover {
-  color: #ffffff;
+  color: #000000;
 }
 
-th {
-  background-color: var(--accent-color);
+#firstRow, .active {
+  background-color: var(--accent-color)!important;
 }
 
 .table-striped > tbody > tr:nth-child(2n+1) > td, .table-striped > tbody > tr:nth-child(2n+1) > th {
-  background-color: #74d3dc50;
+  background-color: var(--stripe-color);
 }
 
 .btn-primary {
@@ -104,10 +116,15 @@ th {
 #orderTable_info {
   position: absolute;
   right: 10px;
+  margin-top: -10px!important;
 }
 
 #orderTable_paginate {
-  margin-top: 60px;
+  margin-top: 50px;
+}
+.pagination {
+  margin: auto;
+  text-align: center;
 }
 
 .dataTables_length {
@@ -142,13 +159,44 @@ th {
   text-align: justify;
 }
 
+@media (max-width: 1300px) {
+  h1 {
+    font-size: 2.8em;
+  }
+}
+
+@media (max-width: 1000px) {
+  h1 {
+    font-size: 2.5em;
+  }
+
+  .language-style {
+    position: static;
+    top: 0;
+    right: 0;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  #language-box {
+    min-width: 280px;
+    max-width: 280px;
+    width: 15vw;
+  }
+}
+
 @media (max-width: 765px) {
-  select {
+  select, #date-box {
     font-size: 20px;
     font-weight: 500;
     min-width: 280px;
     max-width: 280px;
     margin-bottom: 10px;
+  }
+
+  .day {
+    width: 40px;
+    height: 40px;
   }
 
   .row {
@@ -235,18 +283,26 @@ th {
     color: #e1e1e1;
   }
 
-  h1, select, td, label, .dataTables_info, .btn-primary, #updated-on, .about-text {
+  h1, select, td:not(.day), label, .dataTables_info, .btn-primary, #updated-on, .about-text {
     color: #e1e1e1;
   }
 
+  #date-box {
+    color: #fff;
+  }
+
+  select:hover {
+    color: #ffffff;
+  }
+
   .btn-primary {
-    background-color: #74d3dc90;
-    border-color: #74d3dc90;
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
   }
 
   #loader {
     border: 32px solid #383838;
-    border-top: 32px solid #74d3dc;
+    border-top: 32px solid var(--accent-color);
   }
 
   .card-body:hover {
@@ -279,7 +335,7 @@ th {
   }
 
   .disabled {
-    background-color: white;
+    background-color: white!important;
   }
 
   #orderTable_info {
@@ -291,7 +347,7 @@ th {
   }
 
   table {
-    page-break-inside: auto
+    page-break-inside: auto;
   }
 
   tr {
@@ -303,7 +359,7 @@ th {
     border-bottom: 1px solid #ddd;
     padding: 15px;
     text-align: left;
-    color: black;
+    color: black!important;
   }
 }
 
@@ -340,4 +396,39 @@ th {
 .card {
   border: 0;
   border-bottom: 2px solid var(--accent-color);
+}
+
+.day {
+  width: 47px!important;
+  height: 47px!important;
+}
+
+.disabled {
+  border-radius: 0px!important;
+}
+
+.copied-text {
+  background-color: var(--accent-color);
+  color: #121212;
+  text-decoration: none;
+  font-weight: 800;
+  display: none;
+  margin: 0px;
+  margin-left:10px;
+  padding: 0em;
+  padding-left: 0.15em;
+  padding-right: 0.15em;
+}
+
+.copied-text:hover {
+  text-decoration: none!important;
+}
+
+.prentend-link {
+  color: #007bff;
+  cursor: pointer;
+}
+
+.prentend-link:hover {
+  text-decoration: underline;
 }

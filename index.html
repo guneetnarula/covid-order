@@ -3,24 +3,43 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="COVID INDIA Social Security and other welfare and justice measures tracker." />
+    <meta name="keywords" content="covid, coronavirus, india, government, order, tracker" />
+    <meta name="author" content="Dipesh Aggarwal" />
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@COVIDIndiaTrack">
+    <meta name="twitter:creator" content="@COVIDIndiaTrack">
+    <meta property="og:title" content="COVID-19 Government Order Tracker">
+    <meta property="og:description" content="COVID INDIA Social Security and other welfare and justice measures tracker.">
+    <meta property="og:image" content="https://covid-india.in/image.png">
+    <meta property="og:url" content="https://covid-india.in/">
     <title>COVID-19 Government Order Tracker</title>
     
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-NCCGLW8');</script>
 
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4-4.1.1/jq-3.3.1/dt-1.10.20/b-1.6.1/fh-3.1.6/r-2.2.3/datatables.min.css"/>
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <link id="bsdp-css" rel="stylesheet" type="text/css" href="https://unpkg.com/bootstrap-datepicker@1.9.0/dist/css/bootstrap-datepicker3.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/tabletop@1.6.2/src/tabletop.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/v/bs4-4.1.1/jq-3.3.1/dt-1.10.20/b-1.6.1/fh-3.1.6/r-2.2.3/datatables.min.js"></script>
-    <script type="text/javascript" charset="utf8" src="script.js"></script>
+    <script src="https://unpkg.com/bootstrap-datepicker@1.9.0/dist/js/bootstrap-datepicker.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="js/script.js"></script>
   </head>
 
-  <body style="overflow-x:hidden;height:100vh;">
+  <body style="overflow-x:hidden;">
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NCCGLW8" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div id="loader"></div>
 
     <h1 class="horz-center">COVID-19 Government Order Tracker</h1>
-    <div id="main-container" style="margin:10px">
+    <div class="d-flex justify-content-end language-style">
+      <select id="language-box">
+        <option value="english">English</option>
+        <option value="hindi">Hindi</option>
+      </select>
+    </div>
+    <div id="main-container" style="margin-left:10px;margin-right:10px;">
       <div class="row justify-content-md-center" style="padding-top:5px;">
         <div class="col-sm-6 col-md-6 col-lg-auto col mb-md-2 pr-1 pl-1">
           <select id="state-box">
@@ -33,10 +52,24 @@
           </select>
         </div>
         <div class="col-sm-6 col-md-6 col-lg-auto col pr-1 pl-1">
-          <select id="date-box">
-            <option value="">All Dates</option>
+          <input type="text" placeholder="Search by Date" id="date-box">
+        </div>
+        <div class="col-sm-6 col-md-6 col-lg-auto col pr-1 pl-1">
+          <select id="latest-box">
+            <option value="Show All Orders">Show All Orders</option>
+            <option value="Only Latest Orders">Only Latest Orders</option>
           </select>
         </div>
+        <!--<div class="col-sm-6 col-md-6 col-lg-auto col pr-1 pl-1">
+          <select id="colour-box">
+            <option value="#1fb622">Green</option>
+            <option value="#74d3dc">Blue</option>
+            <option value="#ca5010">Orange</option>
+            <option value="#854085">Purple</option>
+            <option value="#742b4c">Tawny Port</option>
+            <option value="#da534f">Valencia</option>
+          </select>
+        </div>-->
       </div>
 
     	<table class="display responsive table-responsive table table-bordered table-striped table-hover" width="100%" id="orderTable">
@@ -48,10 +81,9 @@
 
     	  <tbody id="orderData"></tbody>
     	</table>
-      <br>
-
-      <div id="updated-on" class="horz-center"></div>
       <br />
+
+      <!--<div id="updated-on" class="horz-center"></div>-->
       <div id="footer-bottom">
         <p class="horz-center">
           <a class="btn btn-primary print-text" data-toggle="collapse" href="#contact" role="button" aria-expanded="false" aria-controls="contact" onClick='$("html, body").animate({ scrollTop: $(document).height() }, "slow");'>Contact Us</a>
@@ -93,6 +125,5 @@
       </table>
       <br />
     </div>
-
   </body>
  </html>
